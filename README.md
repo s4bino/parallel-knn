@@ -22,8 +22,8 @@ The K-Nearest Neighbors algorithm is a simple, non-parametric, and lazy learning
 1. **Clone the repository:**
 
    ```bash
-   git clone https://github.com/yourusername/parallel-knn.git
-   cd parallel-knn
+   git clone https://github.com/s4bino/parallel-knn
+   cd ./src
    ```
 
 2. **Install the required Python packages:**
