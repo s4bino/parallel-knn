@@ -15,6 +15,7 @@ class KNearestNeighbors:
         comm = MPI.COMM_WORLD
         rank = comm.Get_rank()
         size = comm.Get_size()
+        print(rank)
 
         # Split the data into chunks, one for each process
         chunk_size = len(X) // size
