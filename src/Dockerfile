@@ -15,12 +15,12 @@ WORKDIR /usr/src/app
 # Caso não tenha o requirements.txt e queira instalar mpi4py diretamente:
 RUN pip install --no-cache-dir mpi4py numpy scikit-learn
 
-# Copie o código fonte para o contêiner
+# Copie o código fonte e o script de inicialização para o contêiner
 COPY . .
+COPY start.sh /usr/src/app/start.sh
 
-# Comando para rodar o script com MPI
-CMD ["mpirun", "--allow-run-as-root", "-n", "2", "python", "test.py"]
+# Dê permissão de execução para o script de inicialização
+RUN chmod +x /usr/src/app/start.sh
 
-
-# Isso executará seu script com 4 processos MPI.
-
+# Defina o script de inicialização como ponto de entrada
+ENTRYPOINT ["/usr/src/app/start.sh"]

@@ -1,10 +1,9 @@
-from mpi4py import MPI  # Import MPI for parallelism
 import numpy as np
 
-class KNearestNeighborsParallel:
+class KNearestNeighbors:
     def __init__(self, k=5):
         """
-        Initialize the parallel K-Nearest Neighbors classifier.
+        Initialize the K-Nearest Neighbors classifier.
 
         Parameters:
         k (int): Number of neighbors to use for classification.
@@ -26,40 +25,17 @@ class KNearestNeighborsParallel:
 
     def predict(self, X):
         """
-        Predict the class labels for the given data in parallel using MPI.
+        Predict the class labels for the given data.
 
         Parameters:
         X (np.ndarray): Feature matrix for which predictions are to be made.
 
         Returns:
-        np.ndarray: Predicted class labels.
+        list: Predicted class labels.
         """
-        # Get the MPI communicator and the rank/size
-        comm = MPI.COMM_WORLD
-        rank = comm.Get_rank()
-        size = comm.Get_size()
-
-        # Split the data into chunks, one for each process
-        chunk_size = len(X) // size
-        start = rank * chunk_size
-        end = len(X) if rank == size - 1 else start + chunk_size
-
-        # Each process computes predictions for its chunk
-        local_X = X[start:end]
-        local_predictions = [
-            self._classified(self._kneighbors(x))
-            for x in local_X
-        ]
-
-        # Gather all predictions from all processes
-        all_predictions = comm.gather(local_predictions, root=0)
-
-        # The root process (rank 0) concatenates all the results
-        if rank == 0:
-            return np.concatenate(all_predictions)
-        else:
-            return None
-
+        # Predict the class for each sample in X
+        return [self._classified(self._kneighbors(x)) for x in X]
+    
     def _euclidean_distance(self, X_train, x):
         """
         Compute the Euclidean distance between each training sample and a given sample.
@@ -71,7 +47,6 @@ class KNearestNeighborsParallel:
         Returns:
         np.ndarray: Array of distances from the sample to each training point.
         """
-        # Optimized by removing the square root, since we are only comparing distances
         return np.sum((X_train - x) ** 2, axis=1)
 
     def _kneighbors(self, x):
@@ -84,13 +59,14 @@ class KNearestNeighborsParallel:
         Returns:
         np.ndarray: Array of target values for the k-nearest neighbors.
         """
+        # Calculate distances from the sample to all training points
         distances = self._euclidean_distance(self.X_train, x)
-        # Get indices of the k-nearest neighbors, optimized to avoid full sort
+        # Get indices of the k-nearest neighbors
         nearest_indices = np.argpartition(distances, self.k)[:self.k]
         # Retrieve the target values of the k-nearest neighbors
         kneighbors = self.y_train[nearest_indices]
         return kneighbors
-
+    
     def _classified(self, kneighbors):
         """
         Determine the most frequent class among the k-nearest neighbors.
